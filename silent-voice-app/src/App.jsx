@@ -76,8 +76,8 @@ const App = () => {
               <p className="text-gray-600 italic">"Communication is the key to every heart."</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
-               <div className="bg-blue-50 p-4 rounded-2xl h-32 flex flex-col justify-end font-bold">FSL Translation</div>
-               <div className="bg-purple-50 p-4 rounded-2xl h-32 flex flex-col justify-end font-bold">New Messages</div>
+               <div className="bg-blue-50 p-4 rounded-2xl h-32 flex flex-col justify-end font-bold">New Messages</div>
+               <div className="bg-purple-50 p-4 rounded-2xl h-32 flex flex-col justify-end font-bold">FSL Translation</div>
             </div>
           </div>
         );
