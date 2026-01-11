@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Home, Search, Bell, User, Send, ChevronLeft, MoreVertical, MapPin, Filter, ArrowRight } from 'lucide-react';
+import { Home, Search, Bell, User, Send, ChevronLeft, MoreVertical, MapPin, Filter, ArrowRight, Bluetooth } from 'lucide-react';
 
 // Fix for default Leaflet icon issues in React
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -35,10 +35,28 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState('home'); // home, map, history, profile
   const [activeChat, setActiveChat] = useState(null);
-  const [mapCenter, setMapCenter] = useState([14.4081, 120.9484]); // Default to Imus/Cavite area
+  const [mapCenter, setMapCenter] = useState([14.4081, 120.9484]); 
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Function to simulate searching a location
+  // --- NEW: BLUETOOTH STATE ---
+  const [deviceName, setDeviceName] = useState("Disconnected");
+
+  // --- NEW: BLUETOOTH CONNECT FUNCTION ---
+  const connectGlove = async () => {
+    try {
+      const device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: ['battery_service'] 
+      });
+      setDeviceName(device.name || "Unknown Glove");
+      await device.gatt.connect();
+      alert("Glove Connected!");
+    } catch (error) {
+      console.error("Bluetooth Error:", error);
+      alert("Connection failed. Make sure Bluetooth is on.");
+    }
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     if(searchQuery.toLowerCase().includes("manila")) setMapCenter([14.5995, 120.9842]);
@@ -63,7 +81,6 @@ const App = () => {
     );
   }
 
-  // --- NAVIGATION LOGIC ---
   const renderContent = () => {
     if (activeChat) return <ChatScreen chat={activeChat} onBack={() => setActiveChat(null)} />;
 
@@ -72,6 +89,26 @@ const App = () => {
         return (
           <div className="p-6 pt-12">
             <h1 className="text-3xl font-bold mb-4">Welcome Back</h1>
+            
+            {/* BLUETOOTH CONNECTION CARD */}
+            <div className="bg-black text-white p-6 rounded-3xl mb-6 shadow-xl">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <p className="text-gray-400 text-sm">Device Status</p>
+                  <h2 className="text-xl font-bold">{deviceName}</h2>
+                </div>
+                <div className={`p-2 rounded-full ${deviceName === "Disconnected" ? "bg-red-500" : "bg-green-500"}`}>
+                  <Bluetooth size={20} />
+                </div>
+              </div>
+              <button 
+                onClick={connectGlove}
+                className="w-full bg-white text-black py-3 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all"
+              >
+                {deviceName === "Disconnected" ? "Connect Glove" : "Reconnect Device"}
+              </button>
+            </div>
+
             <div className="bg-gray-100 p-6 rounded-3xl mb-4">
               <p className="text-gray-600 italic">"Communication is the key to every heart."</p>
             </div>
@@ -94,12 +131,7 @@ const App = () => {
                    onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </form>
-              <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                <button className="bg-white whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold shadow-sm border flex items-center gap-1"><Filter size={12}/> Filter</button>
-                <button className="bg-black text-white whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold shadow-sm">Nearby</button>
-              </div>
             </div>
-            
             <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
               <ChangeView center={mapCenter} />
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -147,11 +179,9 @@ const App = () => {
     <div className="flex flex-col h-screen max-w-md mx-auto bg-white shadow-2xl overflow-hidden relative">
       <div className="flex-1 overflow-hidden">{renderContent()}</div>
       
-      {/* BOTTOM NAVIGATION */}
       <div className="h-20 border-t flex justify-around items-center bg-white px-4 z-[2000]">
         <NavButton active={activeTab === 'home'} icon={<Home />} onClick={() => {setActiveTab('home'); setActiveChat(null)}} />
         <NavButton active={activeTab === 'map'} icon={<Search />} onClick={() => {setActiveTab('map'); setActiveChat(null)}} />
-        {/* Notification Bell now leads to History */}
         <NavButton active={activeTab === 'history'} icon={<Bell />} onClick={() => {setActiveTab('history'); setActiveChat(null)}} />
         <NavButton active={activeTab === 'profile'} icon={<User />} onClick={() => {setActiveTab('profile'); setActiveChat(null)}} />
       </div>
